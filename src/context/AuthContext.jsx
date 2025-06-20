@@ -9,34 +9,38 @@ export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
   const url = "http://localhost:8000";
 
-  const login = async (email, password) => {
-    const response = await axios.post(`${url}/login`, {
-      userName: email,
-      password
-    });
-    localStorage.setItem('token', response.data.token);
-    setUser({ email });
-    navigate('/');
-  };
+const login = async (username, password) => {
+  const response = await axios.post(`${url}/login/`, { username, password });
+  
+  const token = response.data.acess_token; // <- cuidado aqui!
+  console.log("Token recebido da API:", token);
+  
+  localStorage.setItem('token', token);
+  setUser({ username });
+  navigate('/');
+};
 
-  const register = async (nome, email, password) => {
-    await axios.post(`${url}/register`, {
-      userName: nome, 
-      email,
-      password
-    });
-    await login(email, password);
+  const register = async (username, email, password) => {
+    try {
+      await axios.post(`${url}/register/`, { username, email, password });
+      navigate('/login');
+    } catch (error) {
+      console.error("Erro no registro:", error.response?.data || error.message);
+      alert("Erro ao registrar.");
+    }
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem("token");
     setUser(null);
-    navigate('/login'); 
+    navigate('/login');
   };
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) setUser({});
+    const token = localStorage.getItem("token");
+    if (token) {
+      setUser({}); // usuário logado genericamente
+    }
   }, []);
 
   return (

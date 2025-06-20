@@ -3,54 +3,82 @@ import axios from 'axios';
 
 export default function Messages() {
   const [messages, setMessages] = useState([]);
+  const [title, setTitle] = useState('');
   const [newMessage, setNewMessage] = useState('');
-  const [titulo, setTitulo] = useState('');
-  const token = localStorage.getItem('token');
+  const [token, setToken] = useState(null);
   const url = "http://localhost:8000";
 
-  const fetchMessages = async () => {
-    const response = await axios.get(`${url}/posts`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    setMessages(response.data);
-  };
+  useEffect(() => {
+    const storedToken = localStorage.getItem("token");
+    setToken(storedToken);
+    if (storedToken) fetchMessages(storedToken);
+  }, []);
 
-  const sendMessage = async () => {
-    if (newMessage.trim() !== '' && titulo.trim() !== '') {
-      await axios.post(`${url}/posts`, {
-        title: titulo,
-        text: newMessage
-      }, {
-        headers: { Authorization: `Bearer ${token}` },
+  const fetchMessages = async (authToken) => {
+    try {
+      const response = await axios.get(`${url}/posts`, {
+        headers: {
+          Authorization: `Bearer ${authToken}`
+        }
       });
-      setNewMessage('');
-      setTitulo('');
-      fetchMessages();
+      setMessages(response.data);
+    } catch (error) {
+      console.error("Erro ao buscar mensagens:", error.response?.status, error.response?.data || error.message);
     }
   };
 
-  useEffect(() => {
-    fetchMessages();
-  }, []);
+  const sendMessage = async () => {
+    if (title.trim() === '' || newMessage.trim() === '') {
+      alert("Título e mensagem são obrigatórios.");
+      return;
+    }
+
+    const postData = {
+      title,
+      text: newMessage,
+      date: new Date().toISOString()
+    };
+
+    try {
+      const response = await axios.post(`${url}/posts`, postData, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      console.log("Post criado:", response.data);
+      setTitle('');
+      setNewMessage('');
+      fetchMessages(token);
+    } catch (error) {
+      console.error("Erro ao enviar mensagem:", error.response?.status, error.response?.data || error.message);
+      alert("Erro ao enviar. Verifique se está logado.");
+    }
+  };
 
   return (
     <div>
+      <h2>Nova Mensagem</h2>
       <input
-        value={titulo}
-        onChange={(e) => setTitulo(e.target.value)}
-        placeholder="Título da mensagem"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        placeholder="Título"
       />
-      <input
+      <br />
+      <textarea
         value={newMessage}
         onChange={(e) => setNewMessage(e.target.value)}
-        placeholder="Digite sua mensagem"
+        placeholder="Mensagem"
       />
+      <br />
       <button onClick={sendMessage}>Enviar</button>
+
+      <h2>Mensagens</h2>
       <ul>
         {messages.map((msg) => (
           <li key={msg.id}>
-            <strong>{msg.title}</strong><br />
-            {msg.text}
+            <strong>{msg.title}</strong> — {msg.text} <br />
+            <small>{new Date(msg.date).toLocaleString()}</small>
           </li>
         ))}
       </ul>

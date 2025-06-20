@@ -3,19 +3,19 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const { login } = useAuth();
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    login(email, password);
+    login(username, password);
   };
 
   return (
     <form onSubmit={handleSubmit}>
-      <input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-      <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
+      <input placeholder="Usuário" value={username} onChange={(e) => setUsername(e.target.value)} />
+      <input type="password" placeholder="Senha" value={password} onChange={(e) => setPassword(e.target.value)} />
       <button type="submit">Login</button>
       <p>Não tem conta? <Link to="/register">Cadastre-se</Link></p>
     </form>
